@@ -26,11 +26,14 @@
 WiFiManager wifiManager;
 ESP8266WebServer server(80);
 
-// Right now we use the internal led, soon we'll configure a gpio pin and toggle
-// a relay here... when device powered, by default turn on relay
+// remark LED_BUILTIN == D4 == GPIO2
+// we connect our relay to D3 pin
+int relayPin1 = D3; // D3 == GPIO0
 
-int relayPin1 = LED_BUILTIN;
+// state at power up (it switches on anyway at power up due to 
+// inverse logicsetting false will briefly on/off)
 bool relayState1 = true;
+
 
 String SendHTML(uint8_t relay_on) {
   String page = "<!DOCTYPE html> <html>\n";
@@ -55,7 +58,7 @@ String SendHTML(uint8_t relay_on) {
   page += "</head>\n";
   page += "<body>\n";
   page += "<h1>Wifi light switch</h1>\n";
-  page += "<p>Wemos D1 ESP8266 Web Server.</p>";
+  page += "<p><a href=\"/\">Wemos D1 ESP8266 Web Server</a></p>";
   page += "<p>Board ID: 0001</p>";
   page += "<br/><br/>";
 
@@ -96,14 +99,33 @@ void configModeCallback(WiFiManager *myWiFiManager) {
   Serial.println(myWiFiManager->getConfigPortalSSID());
 }
 
+void setPins(bool relayState){
+  if (relayState) {
+    digitalWrite(LED_BUILTIN, LOW);  // led on
+    digitalWrite(relayPin1, LOW);    // relais on
+  } else {
+    digitalWrite(LED_BUILTIN, HIGH);   // led off
+    digitalWrite(relayPin1, HIGH);     // relay off
+  }
+}
+
 // the setup function runs once when you press reset or power the board
 void setup() {
+  setPins(relayState1);
+  pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(relayPin1, OUTPUT);
+  setPins(relayState1);
+  
   // delay(3000);  // wait for serial monitor to start completely.
   Serial.begin(74880);
   // Serial.setDebugOutput(false);
+  
+  Serial.print("relay pin = ");
+  Serial.println(relayPin1);
 
-  // initialize digital pin LED_BUILTIN as an output.
-  pinMode(LED_BUILTIN, OUTPUT);
+  Serial.print("led pin = ");
+  Serial.println(LED_BUILTIN);
+  
   wifiManager.setAPCallback(configModeCallback);
   bool connected = wifiManager.autoConnect("WEMOS_BLINK"); // "name", "pass"
 
@@ -124,11 +146,5 @@ void setup() {
 // Handle web requests and toggle relayPin
 void loop() {
   server.handleClient();
-
-  if (relayState1) {
-    // LOW turns on internal led on (reversed logic is a bit confusing)
-    digitalWrite(relayPin1, LOW);
-  } else {
-    digitalWrite(relayPin1, HIGH);
-  }
+  setPins(relayState1);
 }
