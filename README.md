@@ -7,3 +7,4 @@ its created wifi network. It then allows selecting wifi network + set user + pas
 that allows toggling a relay on/off in the browser.
 
 
+<img width="515" alt="Screenshot 2023-11-25 at 04 21 09" src="https://github.com/w-A-L-L-e/wifi_switch/assets/710803/dad158c0-2f42-4b72-8523-543f46e5aae1">
