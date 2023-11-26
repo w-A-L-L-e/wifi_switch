@@ -90,6 +90,12 @@ void handle_relay1off() {
   server.send(200, "text/html", SendHTML(relayState1));
 }
 
+void handle_wifireset(){
+  server.send(404, "text/plain", "Wifi will be reset. You can connect to 'WIFI_SWITCH' access point.");
+  wifiManager.resetSettings();
+  ESP.restart();
+}
+
 void handle_NotFound() { server.send(404, "text/plain", "Not found"); }
 
 void configModeCallback(WiFiManager *myWiFiManager) {
@@ -110,15 +116,15 @@ void setPins(bool relayState){
 }
 
 // the setup function runs once when you press reset or power the board
-void setup() {
-  setPins(relayState1);
-  pinMode(LED_BUILTIN, OUTPUT);
-  pinMode(relayPin1, OUTPUT);
-  setPins(relayState1);
-  
-  // delay(3000);  // wait for serial monitor to start completely.
+void setup() {  
   Serial.begin(74880);
   // Serial.setDebugOutput(false);
+
+  setPins(false);
+  pinMode(LED_BUILTIN, OUTPUT);
+  pinMode(relayPin1, OUTPUT);
+  setPins(false);
+
   
   Serial.print("relay pin = ");
   Serial.println(relayPin1);
@@ -127,9 +133,8 @@ void setup() {
   Serial.println(LED_BUILTIN);
   
   wifiManager.setAPCallback(configModeCallback);
-  bool connected = wifiManager.autoConnect("WEMOS_BLINK"); // "name", "pass"
+  bool connected = wifiManager.autoConnect("WIFI_SWITCH"); // "name", "pass"
 
-  // wifiManager.resetSettings();
   if (!connected)
     Serial.println("failed to connect to wifi network");
   else
@@ -138,8 +143,12 @@ void setup() {
   server.on("/", handle_OnConnect);
   server.on("/relay1on", handle_relay1on);
   server.on("/relay1off", handle_relay1off);
+  server.on("/resetwifi", handle_wifireset);
   server.onNotFound(handle_NotFound);
   server.enableCORS(true);
+
+  setPins(relayState1);
+
   server.begin();
 }
 
